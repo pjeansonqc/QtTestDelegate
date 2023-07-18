@@ -1,0 +1,34 @@
+BasedOnStyle: llvm
+IndentWidth: 3
+ColumnLimit: 150
+AlwaysBreakTemplateDeclarations: Yes
+ 
+
+BraceWrapping:
+  AfterClass:      true
+  AfterControlStatement: true
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterObjCDeclaration: true
+  AfterStruct:     true
+  AfterUnion:      true
+  AfterCaseLabel:  true
+  BeforeCatch:     true
+  BeforeElse:      true
+  IndentBraces:    false
+BreakBeforeBraces: Custom
+
+BinPackArguments: false
+BinPackParameters: false
+
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+AllowAllConstructorInitializersOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+# do not change for BinPackArguments to work
+ExperimentalAutoDetectBinPacking: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+MaxEmptyLinesToKeep: 2
+
+AllowShortFunctionsOnASingleLine: Empty
