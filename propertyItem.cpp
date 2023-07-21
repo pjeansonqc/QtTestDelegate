@@ -1,69 +1,110 @@
 
 #include "propertyItem.h"
 
-//! [0]
 PropertyItem::PropertyItem(const QVector<QVariant> &data, PropertyItem *parent) : m_itemData(data), m_parentItem(parent) {}
-//! [0]
-
-//! [1]
 PropertyItem::~PropertyItem()
 {
    qDeleteAll(m_childItems);
 }
-//! [1]
+// void PropertyItem::appendChild(PropertyItem *item)
+//{
+//    m_childItems.append(item);
+// }
 
-//! [2]
-void PropertyItem::appendChild(PropertyItem *item)
+PropertyItem *PropertyItem::child(int number)
 {
-   m_childItems.append(item);
-}
-//! [2]
-
-//! [3]
-PropertyItem *PropertyItem::child(int row)
-{
-   if (row < 0 || row >= m_childItems.size())
+   if (number < 0 || number >= m_childItems.size())
       return nullptr;
-   return m_childItems.at(row);
+   return m_childItems.at(number);
 }
-//! [3]
 
-//! [4]
 int PropertyItem::childCount() const
 {
    return m_childItems.count();
 }
-//! [4]
 
-//! [5]
+int PropertyItem::childNumber() const
+{
+   if (m_parentItem)
+      return m_parentItem->m_childItems.indexOf(const_cast<PropertyItem *>(this));
+   return 0;
+}
+
 int PropertyItem::columnCount() const
 {
    return m_itemData.count();
 }
-//! [5]
 
-//! [6]
 QVariant PropertyItem::data(int column) const
 {
    if (column < 0 || column >= m_itemData.size())
       return QVariant();
    return m_itemData.at(column);
 }
-//! [6]
 
-//! [7]
-PropertyItem *PropertyItem::parentItem()
+bool PropertyItem::insertChildren(int position, int count, int columns)
+{
+   if (position < 0 || position > m_childItems.size())
+      return false;
+
+   for (int row = 0; row < count; ++row)
+   {
+      QVector<QVariant> data(columns);
+      PropertyItem *item = new PropertyItem(data, this);
+      m_childItems.insert(position, item);
+   }
+
+   return true;
+}
+
+bool PropertyItem::insertColumns(int position, int columns)
+{
+   if (position < 0 || position > m_itemData.size())
+      return false;
+
+   for (int column = 0; column < columns; ++column)
+      m_itemData.insert(position, QVariant());
+
+   for (PropertyItem *child : qAsConst(m_childItems))
+      child->insertColumns(position, columns);
+
+   return true;
+}
+PropertyItem *PropertyItem::parent()
 {
    return m_parentItem;
 }
-//! [7]
 
-//! [8]
-int PropertyItem::row() const
+bool PropertyItem::removeChildren(int position, int count)
 {
-   if (m_parentItem)
-      return m_parentItem->m_childItems.indexOf(const_cast<PropertyItem *>(this));
+   if (position < 0 || position + count > m_childItems.size())
+      return false;
 
-   return 0;
+   for (int row = 0; row < count; ++row)
+      delete m_childItems.takeAt(position);
+
+   return true;
 }
-//! [8]
+
+bool PropertyItem::removeColumns(int position, int columns)
+{
+   if (position < 0 || position + columns > m_itemData.size())
+      return false;
+
+   for (int column = 0; column < columns; ++column)
+      m_itemData.remove(position);
+
+   for (PropertyItem *child : qAsConst(m_childItems))
+      child->removeColumns(position, columns);
+
+   return true;
+}
+
+bool PropertyItem::setData(int column, const QVariant &value)
+{
+   if (column < 0 || column >= m_itemData.size())
+      return false;
+
+   m_itemData[column] = value;
+   return true;
+}

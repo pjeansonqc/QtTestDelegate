@@ -1,11 +1,9 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
-
+#pragma once
 
 #include <QMainWindow>
 
 class PropertyModel;
-class PropertyDelegate;
+class PropertyItemDelegate;
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -20,12 +18,19 @@ class MainWindow : public QMainWindow
 
  public:
    MainWindow(QWidget *parent = nullptr);
-   ~MainWindow();
+
+ public slots:
+   void updateActions();
+
+ private slots:
+   void insertChild();
+   bool insertColumn();
+   void insertRow();
+   bool removeColumn();
+   void removeRow();
 
  private:
    Ui::MainWindow *ui;
 
    PropertyModel *model = nullptr;
-   PropertyDelegate *delegate = nullptr;
 };
-#endif // MAINWINDOW_H

@@ -1,11 +1,10 @@
 #pragma once
-#include <QtDebug>
-//  qDebug() << "index.column()" << index.column();
-// qDebug() << "index.data()" << index.data();
 #include <QCheckBox>
 #include <QDoubleSpinBox>
 #include <QPainter>
 #include <QStyledItemDelegate>
+#include <QtDebug>
+
 
 class PropertyDelegate : public QStyledItemDelegate
 {

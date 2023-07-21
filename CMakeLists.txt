@@ -24,6 +24,7 @@ set(PROJECT_SOURCES
         propertyModel.cpp
 
         propertyDelegate.h
+        propertyItemDelegate.h
 
         mainwindow.ui
 )
