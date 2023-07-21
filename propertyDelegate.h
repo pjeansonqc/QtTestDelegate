@@ -19,8 +19,7 @@ class PropertyDelegate : public QStyledItemDelegate
 
 void PropertyDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-   qDebug() << "index.column()" << index.column();
-   qDebug() << "index.row()" << index.row();
+   qDebug() << "row, column: (" << index.row() << "," << index.column() << ")";
    if (index.column() == 1)
    {
       QVariant value = index.data(Qt::DisplayRole);
@@ -73,8 +72,7 @@ void PropertyDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
 
 inline QWidget *PropertyDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-   qDebug() << "index.column()" << index.column();
-   qDebug() << "index.row()" << index.row();
+   qDebug() << "row, column: (" << index.row() << "," << index.column() << ")";
 
    if (index.column() == 1)
    {
@@ -116,8 +114,7 @@ inline QWidget *PropertyDelegate::createEditor(QWidget *parent, const QStyleOpti
 
 inline void PropertyDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
-   qDebug() << "index.column()" << index.column();
-   qDebug() << "index.row()" << index.row();
+   qDebug() << "row, column: (" << index.row() << "," << index.column() << ")";
    QVariant value = index.model()->data(index, Qt::EditRole);
    if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox *>(editor))
    {
@@ -139,8 +136,7 @@ inline void PropertyDelegate::setEditorData(QWidget *editor, const QModelIndex &
 
 inline void PropertyDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
-   qDebug() << "index.column()" << index.column();
-   qDebug() << "index.row()" << index.row();
+   qDebug() << "row, column: (" << index.row() << "," << index.column() << ")";
    if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox *>(editor))
    {
       model->setData(index, spinBox->value(), Qt::EditRole);

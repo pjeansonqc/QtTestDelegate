@@ -1,79 +1,50 @@
 #include "propertyModel.h"
+#include "propertyItem.h"
+
 #include <QDoubleSpinBox>
+#include <QStringList>
 
 PropertyModel::PropertyModel(QObject *parent) : QAbstractItemModel(parent)
 {
-   // Add properties to the list
-   Property property;
-   property.name = "Period";
-   property.value = QVariant(0.0);
-   properties.append(property);
-
-   property.name = "Count";
-   property.value = QVariant(int(0));
-   properties.append(property);
-
-   property.name = "Enabled";
-   property.value = QVariant(false);
-   properties.append(property);
-
-   property.name = "Name";
-   property.value = QVariant("Claudia");
-   properties.append(property);
+   mRootItem = new PropertyItem({"Title", "Summary"});
+   //   setupModelData(parent.split('\n'), rootItem);
 }
 
-PropertyModel::~PropertyModel() {}
+PropertyModel::~PropertyModel()
+{
+   delete mRootItem;
+}
 
 QVariant PropertyModel::data(const QModelIndex &index, int role) const
 {
    if (!index.isValid())
       return QVariant();
 
-   if (role == Qt::DisplayRole || role == Qt::EditRole)
-   {
-      if (index.column() == 0)
-      {
-         if (index.row() < properties.size())
-            return properties[index.row()].name;
-      }
-      else if (index.column() == 1)
-      {
-         if (index.row() < properties.size())
-         {
-            if (properties[index.row()].name == "mPeriod")
-            {
-               // Return the value of mPeriod
-               return properties[index.row()].value;
-            }
-            else
-            {
-               // Return other property values as regular QVariant
-               return QVariant::fromValue(properties[index.row()].value);
-            }
-         }
-      }
-   }
+   if (role != Qt::DisplayRole)
+      return QVariant();
 
-   return QVariant();
+   PropertyItem *item = static_cast<PropertyItem *>(index.internalPointer());
+
+   return item->data(index.column());
 }
 
-bool PropertyModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-   if (!index.isValid())
-      return false;
+// bool PropertyModel::setData(const QModelIndex &index, const QVariant &value, int role)
+//{
+//    if (!index.isValid())
+//       return false;
 
-   if (role == Qt::EditRole && index.column() == 1)
-   {
-      if (index.row() < properties.size())
-      {
-         properties[index.row()].value = value;
-         emit dataChanged(index, index);
-         return true;
-      }
-   }
+//   if (role == Qt::EditRole && index.column() == 1)
+//   {
+//      if (index.row() < properties.size())
+//      {
+//         properties[index.row()].value = value;
+//         emit dataChanged(index, index);
+//         return true;
+//      }
+//   }
 
-   return false;
-}
+//   return false;
+//}
 
 Qt::ItemFlags PropertyModel::flags(const QModelIndex &index) const
 {
@@ -90,13 +61,8 @@ Qt::ItemFlags PropertyModel::flags(const QModelIndex &index) const
 
 QVariant PropertyModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-   if (role == Qt::DisplayRole && orientation == Qt::Horizontal)
-   {
-      if (section == 0)
-         return "Property";
-      else if (section == 1)
-         return "Value";
-   }
+   if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
+      return mRootItem->data(section);
 
    return QVariant();
 }
@@ -106,31 +72,136 @@ QModelIndex PropertyModel::index(int row, int column, const QModelIndex &parent)
    if (!hasIndex(row, column, parent))
       return QModelIndex();
 
-   if (!parent.isValid())
-   {
-      if (row < properties.size())
-         return createIndex(row, column);
-   }
+   PropertyItem *parentItem;
 
+   if (!parent.isValid())
+      parentItem = mRootItem;
+   else
+      parentItem = static_cast<PropertyItem *>(parent.internalPointer());
+
+   PropertyItem *childItem = parentItem->child(row);
+   if (childItem)
+      return createIndex(row, column, childItem);
    return QModelIndex();
 }
 
 QModelIndex PropertyModel::parent(const QModelIndex &index) const
 {
-   Q_UNUSED(index)
-   return QModelIndex();
+   if (!index.isValid())
+      return QModelIndex();
+
+   PropertyItem *childItem = static_cast<PropertyItem *>(index.internalPointer());
+   PropertyItem *parentItem = childItem->parentItem();
+
+   if (parentItem == mRootItem)
+      return QModelIndex();
+
+   return createIndex(parentItem->row(), 0, parentItem);
 }
 
 int PropertyModel::rowCount(const QModelIndex &parent) const
 {
-   if (parent.isValid())
+   PropertyItem *parentItem;
+   if (parent.column() > 0)
       return 0;
 
-   return properties.size();
+   if (!parent.isValid())
+      parentItem = mRootItem;
+   else
+      parentItem = static_cast<PropertyItem *>(parent.internalPointer());
+
+   return parentItem->childCount();
 }
 
 int PropertyModel::columnCount(const QModelIndex &parent) const
 {
-   Q_UNUSED(parent)
-   return 2;
+   if (parent.isValid())
+      return static_cast<PropertyItem *>(parent.internalPointer())->columnCount();
+   return mRootItem->columnCount();
+}
+
+bool stringToInt(QString inString, int &outValue)
+{
+   bool isOk = false;
+   outValue = inString.toInt(&isOk);
+   return isOk;
+}
+
+bool stringToDouble(QString inString, double &outValue)
+{
+   bool isOk = false;
+   outValue = inString.toDouble(&isOk);
+   return isOk;
+}
+
+void PropertyModel::setupModelData(const QStringList &lines)
+{
+   QVector<PropertyItem *> parents;
+   QVector<int> indentations;
+   parents << mRootItem;
+   indentations << 0;
+
+   int number = 0;
+
+   while (number < lines.count())
+   {
+      int position = 0;
+      while (position < lines[number].length())
+      {
+         if (lines[number].at(position) != ' ')
+            break;
+         position++;
+      }
+
+      const QString lineData = lines[number].mid(position).trimmed();
+
+      if (!lineData.isEmpty())
+      {
+         // Read the column data from the rest of the line.
+         const QStringList columnStrings = lineData.split(QLatin1Char('\t'), Qt::SkipEmptyParts);
+         QVector<QVariant> columnData;
+         columnData.reserve(columnStrings.count());
+         for (const QString &columnString : columnStrings)
+         {
+            int intValue = 0;
+            double doubleValue = 0.0;
+            if (stringToInt(columnString, intValue))
+            {
+               columnData << intValue;
+            }
+            else if (stringToDouble(columnString, doubleValue))
+            {
+               columnData << doubleValue;
+            }
+            else
+            {
+               columnData << columnString;
+            }
+
+            if (position > indentations.last())
+            {
+               // The last child of the current parent is now the new parent
+               // unless the current parent has no children.
+
+               if (parents.last()->childCount() > 0)
+               {
+                  parents << parents.last()->child(parents.last()->childCount() - 1);
+                  indentations << position;
+               }
+            }
+            else
+            {
+               while (position < indentations.last() && parents.count() > 0)
+               {
+                  parents.pop_back();
+                  indentations.pop_back();
+               }
+            }
+
+            // Append a new item to the current parent's list of children.
+            parents.last()->appendChild(new PropertyItem(columnData, parents.last()));
+         }
+         ++number;
+      }
+   }
 }

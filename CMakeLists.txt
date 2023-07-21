@@ -18,6 +18,8 @@ set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
         mainwindow.h
+        propertyItem.h
+        propertyItem.cpp
         propertyModel.h
         propertyModel.cpp
 
