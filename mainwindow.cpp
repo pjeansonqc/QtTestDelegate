@@ -14,8 +14,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
    const QStringList headers({tr("Title"), tr("Description")});
 
    model = new PropertyModel(headers, "");
+   ui->treeView->setModel(model);
+   auto delegate = new PropertyDelegate;
+   ui->treeView->setItemDelegate(delegate);
 
-   PropertyItem *p2p = new PropertyItem(VarianList({"Point to Point"}), model->mRootItem);
    auto root = model->mRootItem;
    root->insertChildren(root->childCount(), 1, root->columnCount());
    root->child(root->childCount() - 1)->setData(0, "Point to Point");
@@ -49,10 +51,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
    d->child(d->childCount() - 1)->setData(0, "Model");
    d->child(d->childCount() - 1)->setData(1, "testmodel");
 
-   ui->treeView->setModel(model);
-   auto delegate = new PropertyDelegate;
-   //   auto delegate = new PropertyItemDelegate;
-   ui->treeView->setItemDelegate(delegate);
 
    for (int column = 0; column < model->columnCount(); ++column)
       ui->treeView->resizeColumnToContents(column);
