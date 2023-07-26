@@ -24,7 +24,19 @@ set(PROJECT_SOURCES
         propertyModel.cpp
 
         propertyDelegate.h
-        propertyItemDelegate.h
+        choiceModel.h
+        registrationWidget.cpp
+        registrationWidget.h
+        registrationWidget.ui
+
+        registrationParameters.h
+        registrationParameters.cpp
+
+        workingLimitsParameters.h
+        workingLimitsParameters.cpp
+
+        pointToPointParameters.h
+        pointToPointParameters.cpp
 
         mainwindow.ui
 )

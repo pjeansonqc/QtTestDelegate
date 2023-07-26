@@ -2,8 +2,8 @@
 
 #include <QAbstractItemModel>
 #include <QModelIndex>
-#include <QVariant>
 #include <QString>
+#include <QVariant>
 
 class PropertyItem;
 
@@ -14,8 +14,8 @@ class PropertyModel : public QAbstractItemModel
  public:
    PropertyModel(const QStringList &headers, const QString &data, QObject *parent = nullptr);
    ~PropertyModel();
-   //! [0] //! [1]
 
+   void initModel(const QStringList &headers);
    QVariant data(const QModelIndex &index, int role) const override;
    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
@@ -32,10 +32,11 @@ class PropertyModel : public QAbstractItemModel
    bool removeColumns(int position, int columns, const QModelIndex &parent = QModelIndex()) override;
    bool insertRows(int position, int rows, const QModelIndex &parent = QModelIndex()) override;
    bool removeRows(int position, int rows, const QModelIndex &parent = QModelIndex()) override;
+
  private:
    void setupModelData(const QStringList &lines, PropertyItem *parent);
    PropertyItem *getItem(const QModelIndex &index) const;
 
  public:
-   PropertyItem *mRootItem;
+   PropertyItem *mRootItem = nullptr;
 };

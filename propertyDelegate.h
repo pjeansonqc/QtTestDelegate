@@ -1,7 +1,12 @@
 #pragma once
+
+#include "choiceModel.h"
+
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QPainter>
+#include <QStringList>
 #include <QStyledItemDelegate>
 #include <QtDebug>
 
@@ -16,7 +21,7 @@ class PropertyDelegate : public QStyledItemDelegate
    void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
 };
 
-void PropertyDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+inline void PropertyDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
    qDebug() << "row, column: (" << index.row() << "," << index.column() << ")";
    if (index.column() == 1)
@@ -29,20 +34,12 @@ void PropertyDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
       case QMetaType::Double:
       case QMetaType::Float:
       {
-         QDoubleSpinBox spinBox;
-         spinBox.setDecimals(2);
-         spinBox.setSingleStep(0.1);
-         spinBox.setFrame(false);
-         spinBox.setValue(value.toDouble());
-         text = spinBox.textFromValue(value.toDouble());
+         text = QString::number(value.toDouble());
       }
       break;
       case QMetaType::Int:
       {
-         QSpinBox spinBox;
-         spinBox.setFrame(false);
-         spinBox.setValue(value.toInt());
-         text = spinBox.text();
+         text = QString::number(value.toInt());
       }
       break;
       case QMetaType::Bool:
@@ -52,7 +49,19 @@ void PropertyDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
       break;
       default:
       {
-         text = value.toString();
+         qDebug() << "typeName  :" << value.typeName();
+         qDebug() << "     type :" << value.type();
+         qDebug() << " userType :" << value.userType();
+         int userType = value.userType();
+         if (userType == qMetaTypeId<ChoiceModel>())
+         {
+            ChoiceModel model = value.value<ChoiceModel>();
+            text = model.getSelectedChoice();
+         }
+         else
+         {
+            text = value.isValid() ? value.toString() : ".";
+         }
       }
       }
       QStyleOptionViewItem opt = option;
@@ -102,9 +111,22 @@ inline QWidget *PropertyDelegate::createEditor(QWidget *parent, const QStyleOpti
          checkBox->setChecked(value.toBool());
          return checkBox;
       }
+      case QMetaType::QStringList:
+      {
+         QComboBox *comboBox = new QComboBox(parent);
+         comboBox->addItems(value.toStringList());
+         return comboBox;
+      }
       default:
-         qWarning() << "PropertyDelegate::createEditor Unknown type";
-         break;
+         qDebug() << "typeName  :" << value.typeName();
+         qDebug() << "     type :" << value.type();
+         qDebug() << " userType :" << value.userType();
+         int userType = value.userType();
+         if (userType == qMetaTypeId<ChoiceModel>())
+         {
+            QComboBox *comboBox = new QComboBox(parent);
+            return comboBox;
+         }
       } // switch (static_cast<QMetaType::Type>(varType))
    }    // if (index.column() == 1)
    return QStyledItemDelegate::createEditor(parent, option, index);
@@ -127,6 +149,13 @@ inline void PropertyDelegate::setEditorData(QWidget *editor, const QModelIndex &
    {
       checkBox->setChecked(value.toBool());
    }
+   else if (QComboBox *comboBox = qobject_cast<QComboBox *>(editor))
+   {
+      ChoiceModel model = value.value<ChoiceModel>();
+      comboBox->addItems(model.getChoiceList());
+      comboBox->setCurrentIndex(model.getSelection());
+   }
+
    else
    {
       QStyledItemDelegate::setEditorData(editor, index);
@@ -147,6 +176,10 @@ inline void PropertyDelegate::setModelData(QWidget *editor, QAbstractItemModel *
    else if (QCheckBox *checkBox = qobject_cast<QCheckBox *>(editor))
    {
       model->setData(index, checkBox->isChecked(), Qt::EditRole);
+   }
+   else if (QComboBox *comboBox = qobject_cast<QComboBox *>(editor))
+   {
+      model->setData(index, comboBox->currentIndex());
    }
    else
    {

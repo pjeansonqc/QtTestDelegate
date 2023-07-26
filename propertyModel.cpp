@@ -6,12 +6,23 @@
 
 PropertyModel::PropertyModel(const QStringList &headers, const QString &data, QObject *parent) : QAbstractItemModel(parent)
 {
+   initModel(headers);
+}
+
+void PropertyModel::initModel(const QStringList &headers)
+
+{
+   if (mRootItem)
+   {
+      delete mRootItem;
+   }
    QVector<QVariant> rootData;
    for (const QString &header : headers)
       rootData << header;
 
    mRootItem = new PropertyItem(rootData);
 }
+
 
 PropertyModel::~PropertyModel()
 {

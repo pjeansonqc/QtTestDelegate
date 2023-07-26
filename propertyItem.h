@@ -24,12 +24,13 @@ class PropertyItem
    bool removeColumns(int position, int columns);
    int childNumber() const;
    bool setData(int column, const QVariant &value);
+   bool appendChildren(const QString &inPropertyName, const QVariant &value);
+   PropertyItem *addNode(const QString &inNodeName);
 
  private:
    QVector<PropertyItem *> m_childItems;
    QVector<QVariant> m_itemData;
    PropertyItem *m_parentItem;
 };
-//! [0]
 
 #endif // PROPERTYITEM_H

@@ -1,15 +1,12 @@
 
 #include "propertyItem.h"
+#include "choiceModel.h"
 
 PropertyItem::PropertyItem(const QVector<QVariant> &data, PropertyItem *parent) : m_itemData(data), m_parentItem(parent) {}
 PropertyItem::~PropertyItem()
 {
    qDeleteAll(m_childItems);
 }
-// void PropertyItem::appendChild(PropertyItem *item)
-//{
-//    m_childItems.append(item);
-// }
 
 PropertyItem *PropertyItem::child(int number)
 {
@@ -105,6 +102,34 @@ bool PropertyItem::setData(int column, const QVariant &value)
    if (column < 0 || column >= m_itemData.size())
       return false;
 
-   m_itemData[column] = value;
+   if (m_itemData[column].userType() == qMetaTypeId<ChoiceModel>())
+   {
+      ChoiceModel choice = m_itemData[column].value<ChoiceModel>();
+      choice.setSelection(value.toInt());
+      QVariant var;
+      var.setValue<ChoiceModel>(choice);
+      m_itemData[column] = var;
+   }
+   else
+   {
+      m_itemData[column] = value;
+   }
    return true;
+}
+
+
+bool PropertyItem::appendChildren(const QString &inPropertyName, const QVariant &value)
+{
+   bool status = true;
+   insertChildren(childCount(), 1, 2);
+   status &= child(childCount() - 1)->setData(0, inPropertyName);
+   status &= child(childCount() - 1)->setData(1, value);
+   return status;
+}
+
+PropertyItem *PropertyItem::addNode(const QString &inNodeName)
+{
+   insertChildren(childCount(), 1, columnCount());
+   child(childCount() - 1)->setData(0, inNodeName);
+   return (child(childCount() - 1));
 }

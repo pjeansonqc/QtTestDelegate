@@ -1,172 +1,158 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "choiceModel.h"
+#include "pointToPointParameters.h"
 #include "propertyDelegate.h"
 #include "propertyItem.h"
-#include "propertyItemDelegate.h"
 #include "propertyModel.h"
+#include "registrationParameters.h"
+#include "registrationWidget.h"
+#include "workingLimitsParameters.h"
 
-typedef QVector<QVariant> VarianList;
+typedef QVector<QVariant> VarianLBist;
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), mRegistrationWidgetPtr(new RegistrationWidget(this))
 {
+   qRegisterMetaType<ChoiceModel>("ChoiceModel");
    ui->setupUi(this);
-   // Create an instance of the custom model
-   const QStringList headers({tr("Title"), tr("Description")});
-
-   model = new PropertyModel(headers, "");
-   ui->treeView->setModel(model);
-   auto delegate = new PropertyDelegate;
-   ui->treeView->setItemDelegate(delegate);
-
-   auto root = model->mRootItem;
-   root->insertChildren(root->childCount(), 1, root->columnCount());
-   root->child(root->childCount() - 1)->setData(0, "Point to Point");
-
-   auto c = root->child(root->childCount() - 1);
-   c->insertChildren(c->childCount(), 1, 2);
-   c->child(c->childCount() - 1)->setData(0, "Tolerance");
-   c->child(c->childCount() - 1)->setData(1, 0.1);
-
-   c->insertChildren(c->childCount(), 1, 2);
-   c->child(c->childCount() - 1)->setData(0, "Zones");
-   c->child(c->childCount() - 1)->setData(1, 10);
-
-   c->insertChildren(c->childCount(), 1, 2);
-   c->child(c->childCount() - 1)->setData(0, "Model");
-   c->child(c->childCount() - 1)->setData(1, "testmodel");
-
-   root->insertChildren(root->childCount(), 1, root->columnCount());
-   root->child(root->childCount() - 1)->setData(0, "Point to Plane");
-
-   auto d = root->child(root->childCount() - 1);
-   d->insertChildren(d->childCount(), 1, 2);
-   d->child(d->childCount() - 1)->setData(0, "Tolerance");
-   d->child(d->childCount() - 1)->setData(1, 0.1);
-
-   d->insertChildren(d->childCount(), 1, 2);
-   d->child(d->childCount() - 1)->setData(0, "Zones");
-   d->child(d->childCount() - 1)->setData(1, 10);
-
-   d->insertChildren(d->childCount(), 1, 2);
-   d->child(d->childCount() - 1)->setData(0, "Model");
-   d->child(d->childCount() - 1)->setData(1, "testmodel");
 
 
-   for (int column = 0; column < model->columnCount(); ++column)
-      ui->treeView->resizeColumnToContents(column);
+   ui->scrollArea->setWidget(mRegistrationWidgetPtr);
+   mRegistrationWidgetPtr->onSetAlgorithmList({"Point to Point", "Point to Plane", "GoICP"});
+   mRegistrationWidgetPtr->onSetAlgorithmSelection(0);
+
+
+   QObject *registrationParametersPtr = new RegistrationParameters();
+   registrationParametersPtr->setParent(this);
+   QObject *workingLimitsParametersPtr = new WorkingLimitsParameters();
+   workingLimitsParametersPtr->setParent(registrationParametersPtr);
+   QObject *pointToPointParameters = new PointToPointParameters();
+   pointToPointParameters->setParent(workingLimitsParametersPtr);
+
+   mRegistrationWidgetPtr->onSetObject(registrationParametersPtr);
+
 
    connect(ui->exitAction, &QAction::triggered, qApp, &QCoreApplication::quit);
 
-   connect(ui->treeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
+   //   connect(ui->treeView->selectionModel(), &QItemSelectionModel::selectionChanged, this, &MainWindow::updateActions);
 
-   connect(ui->actionsMenu, &QMenu::aboutToShow, this, &MainWindow::updateActions);
-   connect(ui->insertRowAction, &QAction::triggered, this, &MainWindow::insertRow);
-   connect(ui->insertColumnAction, &QAction::triggered, this, &MainWindow::insertColumn);
-   connect(ui->removeRowAction, &QAction::triggered, this, &MainWindow::removeRow);
-   connect(ui->removeColumnAction, &QAction::triggered, this, &MainWindow::removeColumn);
-   connect(ui->insertChildAction, &QAction::triggered, this, &MainWindow::insertChild);
+   //   connect(ui->actionsMenu, &QMenu::aboutToShow, this, &MainWindow::updateActions);
+   //   connect(ui->insertRowAction, &QAction::triggered, this, &MainWindow::insertRow);
+   //   connect(ui->insertColumnAction, &QAction::triggered, this, &MainWindow::insertColumn);
+   //   connect(ui->removeRowAction, &QAction::triggered, this, &MainWindow::removeRow);
+   //   connect(ui->removeColumnAction, &QAction::triggered, this, &MainWindow::removeColumn);
+   //   connect(ui->insertChildAction, &QAction::triggered, this, &MainWindow::insertChild);
 
-   updateActions();
+   //   updateActions();
 }
 
-void MainWindow::insertChild()
+MainWindow::~MainWindow()
 {
-   const QModelIndex index = ui->treeView->selectionModel()->currentIndex();
-   QAbstractItemModel *model = ui->treeView->model();
-
-   if (model->columnCount(index) == 0)
-   {
-      if (!model->insertColumn(0, index))
-         return;
-   }
-
-   if (!model->insertRow(0, index))
-      return;
-
-   for (int column = 0; column < model->columnCount(index); ++column)
-   {
-      const QModelIndex child = model->index(0, column, index);
-      model->setData(child, QVariant(tr("[No data]")), Qt::EditRole);
-      if (!model->headerData(column, Qt::Horizontal).isValid())
-         model->setHeaderData(column, Qt::Horizontal, QVariant(tr("[No header]")), Qt::EditRole);
-   }
-
-   ui->treeView->selectionModel()->setCurrentIndex(model->index(0, 0, index), QItemSelectionModel::ClearAndSelect);
-   updateActions();
+   //   if (mRegistrationWidgetPtr)
+   //   {
+   //      delete mRegistrationWidgetPtr;
+   //      mRegistrationWidgetPtr = nullptr;
+   //   }
 }
 
-bool MainWindow::insertColumn()
-{
-   QAbstractItemModel *model = ui->treeView->model();
-   int column = ui->treeView->selectionModel()->currentIndex().column();
+// void MainWindow::insertChild()
+//{
+//    const QModelIndex index = ui->treeView->selectionModel()->currentIndex();
+//    QAbstractItemModel *model = ui->treeView->model();
 
-   // Insert a column in the parent item.
-   bool changed = model->insertColumn(column + 1);
-   if (changed)
-      model->setHeaderData(column + 1, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
+//   if (model->columnCount(index) == 0)
+//   {
+//      if (!model->insertColumn(0, index))
+//         return;
+//   }
 
-   updateActions();
+//   if (!model->insertRow(0, index))
+//      return;
 
-   return changed;
-}
+//   for (int column = 0; column < model->columnCount(index); ++column)
+//   {
+//      const QModelIndex child = model->index(0, column, index);
+//      model->setData(child, QVariant(tr("[No data]")), Qt::EditRole);
+//      if (!model->headerData(column, Qt::Horizontal).isValid())
+//         model->setHeaderData(column, Qt::Horizontal, QVariant(tr("[No header]")), Qt::EditRole);
+//   }
 
-void MainWindow::insertRow()
-{
-   const QModelIndex index = ui->treeView->selectionModel()->currentIndex();
-   QAbstractItemModel *model = ui->treeView->model();
+//   ui->treeView->selectionModel()->setCurrentIndex(model->index(0, 0, index), QItemSelectionModel::ClearAndSelect);
+//   updateActions();
+//}
 
-   if (!model->insertRow(index.row() + 1, index.parent()))
-      return;
+// bool MainWindow::insertColumn()
+//{
+//    QAbstractItemModel *model = ui->treeView->model();
+//    int column = ui->treeView->selectionModel()->currentIndex().column();
 
-   updateActions();
+//   // Insert a column in the parent item.
+//   bool changed = model->insertColumn(column + 1);
+//   if (changed)
+//      model->setHeaderData(column + 1, Qt::Horizontal, QVariant("[No header]"), Qt::EditRole);
 
-   for (int column = 0; column < model->columnCount(index.parent()); ++column)
-   {
-      const QModelIndex child = model->index(index.row() + 1, column, index.parent());
-      model->setData(child, QVariant(tr("[No data]")), Qt::EditRole);
-   }
-}
+//   updateActions();
 
-bool MainWindow::removeColumn()
-{
-   QAbstractItemModel *model = ui->treeView->model();
-   const int column = ui->treeView->selectionModel()->currentIndex().column();
+//   return changed;
+//}
 
-   // Insert columns in each child of the parent item.
-   const bool changed = model->removeColumn(column);
-   if (changed)
-      updateActions();
+// void MainWindow::insertRow()
+//{
+//    const QModelIndex index = ui->treeView->selectionModel()->currentIndex();
+//    QAbstractItemModel *model = ui->treeView->model();
 
-   return changed;
-}
+//   if (!model->insertRow(index.row() + 1, index.parent()))
+//      return;
 
-void MainWindow::removeRow()
-{
-   const QModelIndex index = ui->treeView->selectionModel()->currentIndex();
-   QAbstractItemModel *model = ui->treeView->model();
-   if (model->removeRow(index.row(), index.parent()))
-      updateActions();
-}
+//   updateActions();
 
-void MainWindow::updateActions()
-{
-   const bool hasSelection = !ui->treeView->selectionModel()->selection().isEmpty();
-   ui->removeRowAction->setEnabled(hasSelection);
-   ui->removeColumnAction->setEnabled(hasSelection);
+//   for (int column = 0; column < model->columnCount(index.parent()); ++column)
+//   {
+//      const QModelIndex child = model->index(index.row() + 1, column, index.parent());
+//      model->setData(child, QVariant(tr("[No data]")), Qt::EditRole);
+//   }
+//}
 
-   const bool hasCurrent = ui->treeView->selectionModel()->currentIndex().isValid();
-   ui->insertRowAction->setEnabled(hasCurrent);
-   ui->insertColumnAction->setEnabled(hasCurrent);
+// bool MainWindow::removeColumn()
+//{
+//    QAbstractItemModel *model = ui->treeView->model();
+//    const int column = ui->treeView->selectionModel()->currentIndex().column();
 
-   if (hasCurrent)
-   {
-      ui->treeView->closePersistentEditor(ui->treeView->selectionModel()->currentIndex());
+//   // Insert columns in each child of the parent item.
+//   const bool changed = model->removeColumn(column);
+//   if (changed)
+//      updateActions();
 
-      const int row = ui->treeView->selectionModel()->currentIndex().row();
-      const int column = ui->treeView->selectionModel()->currentIndex().column();
-      if (ui->treeView->selectionModel()->currentIndex().parent().isValid())
-         statusBar()->showMessage(tr("Position: (%1,%2)").arg(row).arg(column));
-      else
-         statusBar()->showMessage(tr("Position: (%1,%2) in top level").arg(row).arg(column));
-   }
-}
+//   return changed;
+//}
+
+// void MainWindow::removeRow()
+//{
+//    const QModelIndex index = ui->treeView->selectionModel()->currentIndex();
+//    QAbstractItemModel *model = ui->treeView->model();
+//    if (model->removeRow(index.row(), index.parent()))
+//       updateActions();
+// }
+
+// void MainWindow::updateActions()
+//{
+//    const bool hasSelection = !ui->treeView->selectionModel()->selection().isEmpty();
+//    ui->removeRowAction->setEnabled(hasSelection);
+//    ui->removeColumnAction->setEnabled(hasSelection);
+
+//   const bool hasCurrent = ui->treeView->selectionModel()->currentIndex().isValid();
+//   ui->insertRowAction->setEnabled(hasCurrent);
+//   ui->insertColumnAction->setEnabled(hasCurrent);
+
+//   if (hasCurrent)
+//   {
+//      ui->treeView->closePersistentEditor(ui->treeView->selectionModel()->currentIndex());
+
+//      const int row = ui->treeView->selectionModel()->currentIndex().row();
+//      const int column = ui->treeView->selectionModel()->currentIndex().column();
+//      if (ui->treeView->selectionModel()->currentIndex().parent().isValid())
+//         statusBar()->showMessage(tr("Position: (%1,%2)").arg(row).arg(column));
+//      else
+//         statusBar()->showMessage(tr("Position: (%1,%2) in top level").arg(row).arg(column));
+//   }
+//}

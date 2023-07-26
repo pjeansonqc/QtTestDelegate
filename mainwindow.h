@@ -2,8 +2,10 @@
 
 #include <QMainWindow>
 
-class PropertyModel;
 class PropertyItemDelegate;
+class RegistrationWidget;
+class RegistrationParameters;
+class WorkingLimitsParameters;
 
 QT_BEGIN_NAMESPACE
 namespace Ui
@@ -18,19 +20,23 @@ class MainWindow : public QMainWindow
 
  public:
    MainWindow(QWidget *parent = nullptr);
+   virtual ~MainWindow();
 
  public slots:
-   void updateActions();
+   //   void updateActions();
 
  private slots:
-   void insertChild();
-   bool insertColumn();
-   void insertRow();
-   bool removeColumn();
-   void removeRow();
+   //   void insertChild();
+   //   bool insertColumn();
+   //   void insertRow();
+   //   bool removeColumn();
+   //   void removeRow();
 
  private:
    Ui::MainWindow *ui;
 
-   PropertyModel *model = nullptr;
+
+   RegistrationWidget *mRegistrationWidgetPtr = nullptr;
+   RegistrationParameters *mRegistrationParametersPtr = nullptr;
+   WorkingLimitsParameters *mWorkingLimitsParametersPtr = nullptr;
 };
