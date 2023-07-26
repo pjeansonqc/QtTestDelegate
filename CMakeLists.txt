@@ -24,7 +24,11 @@ set(PROJECT_SOURCES
         propertyModel.cpp
 
         propertyDelegate.h
+        propertyDelegate.cpp
+
         choiceModel.h
+        choiceModel.cpp
+
         registrationWidget.cpp
         registrationWidget.h
         registrationWidget.ui
