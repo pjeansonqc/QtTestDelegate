@@ -1,9 +1,11 @@
 #include "propertyDelegate.h"
-
+#define PRINT_DEBUG false
 
 void PropertyDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
+#if (PRINT_DEBUG)
    qDebug() << "row, column: (" << index.row() << "," << index.column() << ")";
+#endif
    if (index.column() == 1)
    {
       QVariant value = index.data(Qt::DisplayRole);
@@ -29,9 +31,11 @@ void PropertyDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
       break;
       default:
       {
+#if (PRINT_DEBUG)
          qDebug() << "typeName  :" << value.typeName();
          qDebug() << "     type :" << value.type();
          qDebug() << " userType :" << value.userType();
+#endif
          int userType = value.userType();
          if (userType == qMetaTypeId<ChoiceModel>())
          {
@@ -59,8 +63,9 @@ void PropertyDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
 
 QWidget *PropertyDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
+#if (PRINT_DEBUG)
    qDebug() << "row, column: (" << index.row() << "," << index.column() << ")";
-
+#endif
    if (index.column() == 1)
    {
       QVariant value = index.data(Qt::EditRole);
@@ -97,9 +102,11 @@ QWidget *PropertyDelegate::createEditor(QWidget *parent, const QStyleOptionViewI
          return comboBox;
       }
       default:
+#if (PRINT_DEBUG)
          qDebug() << "typeName  :" << value.typeName();
          qDebug() << "     type :" << value.type();
          qDebug() << " userType :" << value.userType();
+#endif
          int userType = value.userType();
          if (userType == qMetaTypeId<ChoiceModel>())
          {
@@ -113,7 +120,9 @@ QWidget *PropertyDelegate::createEditor(QWidget *parent, const QStyleOptionViewI
 
 void PropertyDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
+#if (PRINT_DEBUG)
    qDebug() << "row, column: (" << index.row() << "," << index.column() << ")";
+#endif
    QVariant value = index.model()->data(index, Qt::EditRole);
    if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox *>(editor))
    {
@@ -142,7 +151,9 @@ void PropertyDelegate::setEditorData(QWidget *editor, const QModelIndex &index) 
 
 void PropertyDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
+#if (PRINT_DEBUG)
    qDebug() << "row, column: (" << index.row() << "," << index.column() << ")";
+#endif
    if (QDoubleSpinBox *spinBox = qobject_cast<QDoubleSpinBox *>(editor))
    {
       model->setData(index, spinBox->value(), Qt::EditRole);

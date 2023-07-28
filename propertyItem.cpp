@@ -118,12 +118,13 @@ bool PropertyItem::setData(int column, const QVariant &value)
 }
 
 
-bool PropertyItem::appendChildren(const QString &inPropertyName, const QVariant &value)
+bool PropertyItem::appendChildren(const QString &inPropertyName, const QVariant &value, QObject *inObject)
 {
    bool status = true;
    insertChildren(childCount(), 1, 2);
    status &= child(childCount() - 1)->setData(0, inPropertyName);
    status &= child(childCount() - 1)->setData(1, value);
+   child(childCount() - 1)->setObject(inObject);
    return status;
 }
 
@@ -132,4 +133,24 @@ PropertyItem *PropertyItem::addNode(const QString &inNodeName)
    insertChildren(childCount(), 1, columnCount());
    child(childCount() - 1)->setData(0, inNodeName);
    return (child(childCount() - 1));
+}
+
+QObject *PropertyItem::getObject() const
+{
+   return mObject;
+}
+
+void PropertyItem::setObject(QObject *inObject)
+{
+   mObject = inObject;
+}
+
+const QString &PropertyItem::getName() const
+{
+   return mName;
+}
+
+void PropertyItem::setName(const QString &inName)
+{
+   mName = inName;
 }

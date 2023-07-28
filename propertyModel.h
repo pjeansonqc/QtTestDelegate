@@ -12,7 +12,7 @@ class PropertyModel : public QAbstractItemModel
    Q_OBJECT
 
  public:
-   PropertyModel(const QStringList &headers, const QString &data, QObject *parent = nullptr);
+   PropertyModel(const QStringList &headers, QObject *parent = nullptr);
    ~PropertyModel();
 
    void initModel(const QStringList &headers);

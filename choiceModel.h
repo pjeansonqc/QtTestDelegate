@@ -14,6 +14,10 @@ class ChoiceModel
    void setChoiceList(const QStringList &inChoiceList);
 
    QString getSelectedChoice();
+   bool operator==(const ChoiceModel &inOther) const
+   {
+      return (mSelection == inOther.mSelection && mChoiceList == inOther.mChoiceList);
+   }
 
  private: // methods
  private:
@@ -21,14 +25,3 @@ class ChoiceModel
    int mSelection = 0;
 };
 Q_DECLARE_METATYPE(ChoiceModel)
-
-
-
-
-
-
-
-
-
-
-

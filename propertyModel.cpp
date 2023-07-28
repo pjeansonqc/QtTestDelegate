@@ -4,7 +4,7 @@
 #include <QDoubleSpinBox>
 #include <QStringList>
 
-PropertyModel::PropertyModel(const QStringList &headers, const QString &data, QObject *parent) : QAbstractItemModel(parent)
+PropertyModel::PropertyModel(const QStringList &headers, QObject *parent) : QAbstractItemModel(parent)
 {
    initModel(headers);
 }
@@ -47,24 +47,6 @@ QVariant PropertyModel::data(const QModelIndex &index, int role) const
 
    return item->data(index.column());
 }
-
-// bool PropertyModel::setData(const QModelIndex &index, const QVariant &value, int role)
-//{
-//    if (!index.isValid())
-//       return false;
-
-//   if (role == Qt::EditRole && index.column() == 1)
-//   {
-//      if (index.row() < properties.size())
-//      {
-//         properties[index.row()].value = value;
-//         emit dataChanged(index, index);
-//         return true;
-//      }
-//   }
-
-//   return false;
-//}
 
 Qt::ItemFlags PropertyModel::flags(const QModelIndex &index) const
 {
@@ -185,8 +167,14 @@ bool PropertyModel::setData(const QModelIndex &index, const QVariant &value, int
    bool result = item->setData(index.column(), value);
 
    if (result)
+   {
       emit dataChanged(index, index, {Qt::DisplayRole, Qt::EditRole});
-
+      QObject *object = item->getObject();
+      if (object)
+      {
+         object->setProperty(item->data(0).toString().toLocal8Bit(), item->data(1));
+      }
+   }
    return result;
 }
 

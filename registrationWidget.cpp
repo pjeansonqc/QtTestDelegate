@@ -6,6 +6,8 @@
 #include "registrationParameters.h"
 #include "ui_registrationWidget.h"
 
+#include <QMetaProperty>
+
 
 RegistrationWidget::RegistrationWidget(QWidget *parent) : QWidget(parent), mUiPtr(new Ui::RegistrationWidget), mPropertyModelPtr()
 {
@@ -14,7 +16,7 @@ RegistrationWidget::RegistrationWidget(QWidget *parent) : QWidget(parent), mUiPt
    // Create an instance of the custom model
    mHeaders.append({"Title", "Description"});
 
-   mPropertyModelPtr = new PropertyModel(mHeaders, "", parent);
+   mPropertyModelPtr = new PropertyModel(mHeaders, parent);
    mPropertyModelPtr->initModel(mHeaders);
    mUiPtr->treeView->setModel(mPropertyModelPtr);
    auto delegate = new PropertyDelegate;
@@ -52,12 +54,19 @@ void RegistrationWidget::onSetObject(QObject *inObject)
 
 void RegistrationWidget::setObjectInNode(QObject *inObject, PropertyItem *inItem)
 {
-   auto objectItem = inItem->addNode(inObject->objectName());
+   PropertyItem *objectItem = inItem->addNode(inObject->objectName());
+   // Add regular properties
+   auto metaObject = inObject->metaObject();
+   for (int index = metaObject->propertyOffset(); index < metaObject->propertyCount(); ++index)
+   {
+      objectItem->appendChildren(metaObject->property(index).name(), metaObject->property(index).read(inObject), inObject);
+   }
+   // Add dynamic properties
    auto properties = inObject->dynamicPropertyNames();
    for (auto prop : properties)
    {
       QVariant qvar = inObject->property(prop);
-      objectItem->appendChildren(prop, qvar);
+      objectItem->appendChildren(prop, qvar, inObject);
    }
    auto objectList = inObject->children();
    for (auto child : objectList)
