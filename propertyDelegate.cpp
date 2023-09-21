@@ -1,6 +1,10 @@
 #include "propertyDelegate.h"
-#define PRINT_DEBUG false
+#include "doubleScientificSpinBox.h"
+#include <cmath>
 
+
+#define PRINT_DEBUG false
+static const int scPrecision = 4;
 void PropertyDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
 #if (PRINT_DEBUG)
@@ -16,7 +20,15 @@ void PropertyDelegate::paint(QPainter *painter, const QStyleOptionViewItem &opti
       case QMetaType::Double:
       case QMetaType::Float:
       {
-         text = QString::number(value.toDouble());
+         double thresholdValue = std::pow(10, scPrecision);
+         if (fabs(value.toDouble()) <= thresholdValue && value.toDouble() > 1.0 / thresholdValue)
+         {
+            text = QString::number(value.toDouble(), 'f', scPrecision);
+         }
+         else
+         {
+            text = QString::number(value.toDouble(), 'g', scPrecision + 1);
+         }
       }
       break;
       case QMetaType::Int:
@@ -75,10 +87,8 @@ QWidget *PropertyDelegate::createEditor(QWidget *parent, const QStyleOptionViewI
       case QMetaType::Double:
       case QMetaType::Float:
       {
-         QDoubleSpinBox *spinBox = new QDoubleSpinBox(parent);
-         spinBox->setDecimals(2);
-         spinBox->setSingleStep(0.1);
-         spinBox->setFrame(false);
+         DoubleScientificSpinBox *spinBox = new DoubleScientificSpinBox(parent);
+         spinBox->setPrecision(scPrecision);
          spinBox->setValue(value.toDouble());
          return spinBox;
       }
@@ -128,6 +138,10 @@ void PropertyDelegate::setEditorData(QWidget *editor, const QModelIndex &index) 
    {
       spinBox->setValue(value.toDouble());
    }
+   else if (DoubleScientificSpinBox *spinBox = qobject_cast<DoubleScientificSpinBox *>(editor))
+   {
+      spinBox->setValue(value.toDouble());
+   }
    else if (QSpinBox *spinBox = qobject_cast<QSpinBox *>(editor))
    {
       spinBox->setValue(value.toInt());
@@ -162,6 +176,10 @@ void PropertyDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, 
    {
       model->setData(index, spinBox->value(), Qt::EditRole);
    }
+   else if (DoubleScientificSpinBox *spinBox = qobject_cast<DoubleScientificSpinBox *>(editor))
+   {
+      model->setData(index, spinBox->getValue(), Qt::EditRole);
+   }
    else if (QCheckBox *checkBox = qobject_cast<QCheckBox *>(editor))
    {
       model->setData(index, checkBox->isChecked(), Qt::EditRole);
@@ -179,5 +197,13 @@ void PropertyDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, 
 void PropertyDelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
    Q_UNUSED(index);
-   editor->setGeometry(option.rect);
+   QRect r = option.rect;
+   r.adjust(-5, -5, 5, 5);
+   editor->setGeometry(r);
+}
+
+QSize PropertyDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
+{
+   QSize size = QStyledItemDelegate::sizeHint(option, index);
+   return size.grownBy(QMargins(2, 2, 2, 2));
 }

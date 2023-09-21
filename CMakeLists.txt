@@ -42,6 +42,9 @@ set(PROJECT_SOURCES
         pointToPointParameters.h
         pointToPointParameters.cpp
 
+        doubleScientificSpinBox.h
+        doubleScientificSpinBox.cpp
+        doubleScientificSpinBox.ui
         mainwindow.ui
 )
 
